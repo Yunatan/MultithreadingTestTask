@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTask", "TestTask\TestTask.csproj", "{A3477E35-C432-434F-A022-3C2C649AF06D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A3477E35-C432-434F-A022-3C2C649AF06D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3477E35-C432-434F-A022-3C2C649AF06D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3477E35-C432-434F-A022-3C2C649AF06D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3477E35-C432-434F-A022-3C2C649AF06D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
