@@ -17,6 +17,7 @@ namespace TestTask
             this.consumerComponent = consumerComponent;
             fsEntriesToTreeNodesMap = new Dictionary<FileSystemInfo, TreeNode>();
             addTreeNodeFunc = AddNodeAsExpanded;
+            treeView.Nodes.Clear();
         }
 
         private delegate int AddTreeNodeFunc(TreeNodeCollection nodes, TreeNode i);
@@ -28,7 +29,6 @@ namespace TestTask
 
         public void BeginConsume()
         {
-            treeView.Nodes.Clear();
             consumerComponent.BeginConsume(RenderFsEntryToTreeView);
         }
 
