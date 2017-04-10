@@ -41,6 +41,11 @@
             this.treeView.Size = new System.Drawing.Size(359, 580);
             this.treeView.TabIndex = 0;
             // 
+            // saveXmlFileDialog
+            // 
+            this.saveXmlFileDialog.DefaultExt = "xml";
+            this.saveXmlFileDialog.Filter = "XML files (*.xml)|*.xml";
+            // 
             // linkLabel1
             // 
             this.linkLabel1.AutoSize = true;

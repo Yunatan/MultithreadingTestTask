@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
@@ -6,21 +7,22 @@ namespace TestTask
 {
     public class DirectoryScanner
     {
-        public readonly AutoResetEvent FsEntryScannedEvent;
+        public readonly AutoResetEvent FsEntryScannedEvent = new AutoResetEvent(false);
         public readonly List<Queue<HierarchicalLink<FileSystemInfo>>> PubList;
+
         private readonly string path;
 
         public DirectoryScanner(string path)
         {
             this.path = path;
             PubList = new List<Queue<HierarchicalLink<FileSystemInfo>>>();
-            FsEntryScannedEvent = new AutoResetEvent(false);
         }
 
         public void BeginScanDirectoryContent()
         {
             var rootDirectoryInfo = new DirectoryInfo(path);
             PublishNewFsEntry(null, rootDirectoryInfo);
+            
             ScanDirectoryRecursively(rootDirectoryInfo);
         }
 
@@ -29,7 +31,14 @@ namespace TestTask
             foreach (var childDirectory in parentDirectoryInfo.GetDirectories())
             {
                 PublishNewFsEntry(parentDirectoryInfo, childDirectory);
-                ScanDirectoryRecursively(childDirectory);
+                try
+                {
+                    ScanDirectoryRecursively(childDirectory);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    //swallow UnauthorizedAccess exceptions for folders we have no permission to visit
+                }
             }
             foreach (var file in parentDirectoryInfo.GetFiles())
             {
@@ -40,7 +49,18 @@ namespace TestTask
         private void PublishNewFsEntry(FileSystemInfo parent, FileSystemInfo child)
         {
             var link = new HierarchicalLink<FileSystemInfo>(parent, child);
-            PubList.ForEach(x => x.Enqueue(link));
+            foreach (var queue in PubList)
+            {
+                try
+                {
+                    Monitor.Enter(queue);
+                    queue.Enqueue(link);
+                }
+                finally
+                {
+                    Monitor.Exit(queue);
+                }
+            }
             FsEntryScannedEvent.Set();
         }
     }

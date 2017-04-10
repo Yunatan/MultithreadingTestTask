@@ -45,6 +45,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DirectoryScanner.cs" />
+    <Compile Include="ExceptionsHandler.cs" />
+    <Compile Include="FsEntryXmlSerializer.cs" />
     <Compile Include="HierarchicalLink.cs" />
     <Compile Include="Forms\MainWindow.cs">
       <SubType>Form</SubType>

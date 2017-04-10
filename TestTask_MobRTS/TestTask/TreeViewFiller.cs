@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -11,31 +10,20 @@ namespace TestTask
         public readonly Queue<HierarchicalLink<FileSystemInfo>> FsEntriesQueue;
 
         private readonly TreeView treeView;
+        private readonly AutoResetEvent fsEntryScannedEvent;
         private readonly Dictionary<FileSystemInfo, TreeNode> fsEntriesToTreeNodesMap;
         private readonly AddTreeNodeFunc addTreeNodeFunc;
-        private readonly AutoResetEvent fsEntryScannedEvent;
 
         public TreeViewFiller(TreeView treeView, AutoResetEvent fsEntryScannedEvent)
         {
+            FsEntriesQueue = new Queue<HierarchicalLink<FileSystemInfo>>();
             this.treeView = treeView;
             this.fsEntryScannedEvent = fsEntryScannedEvent;
             fsEntriesToTreeNodesMap = new Dictionary<FileSystemInfo, TreeNode>();
             addTreeNodeFunc = AddNodeAsExpanded;
-            FsEntriesQueue = new Queue<HierarchicalLink<FileSystemInfo>>();
-            treeView.Nodes.Clear();
         }
 
         private delegate int AddTreeNodeFunc(TreeNodeCollection nodes, TreeNode i);
-
-        private static int AddNodeAsExpanded(TreeNodeCollection nodes, TreeNode newNode)
-        {
-            var i = nodes.Add(newNode);
-            if (newNode.Parent != null && newNode.Parent.IsExpanded == false)
-            {
-                newNode.Parent.Expand();
-            }
-            return i;
-        }
 
         public void BeginListDirectoryContentToTree()
         {
@@ -48,9 +36,19 @@ namespace TestTask
 
         private void MonitorQueue()
         {
-            if (FsEntriesQueue.Any())
+            if (FsEntriesQueue.Count > 0)
             {
-                RenderFsEntryToTreeView(FsEntriesQueue.Dequeue());
+                HierarchicalLink<FileSystemInfo> newFsEntry;
+                try
+                {
+                    Monitor.Enter(FsEntriesQueue);
+                    newFsEntry = FsEntriesQueue.Dequeue();
+                }
+                finally
+                {
+                    Monitor.Exit(FsEntriesQueue);
+                }
+                RenderFsEntryToTreeView(newFsEntry);
             }
             else
             {
@@ -66,6 +64,16 @@ namespace TestTask
                 : fsEntriesToTreeNodesMap[link.Parent].Nodes;
             treeView.Invoke(addTreeNodeFunc, parentNodeCollection, newNode);
             fsEntriesToTreeNodesMap[link.Child] = newNode;
+        }
+
+        private static int AddNodeAsExpanded(TreeNodeCollection nodes, TreeNode newNode)
+        {
+            var i = nodes.Add(newNode);
+            if (newNode.Parent != null && newNode.Parent.IsExpanded == false)
+            {
+                newNode.Parent.Expand();
+            }
+            return i;
         }
     }
 }
