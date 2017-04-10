@@ -27,17 +27,18 @@ namespace TestTask
         internal static void StartMainLoop(string selectedPath, string selectedFileName, TreeView treeView)
         {
             var directoryScanner = new DirectoryScanner(selectedPath);
-            var treeViewFiller = new TreeViewFiller(treeView, directoryScanner.FsEntryScannedEvent);
-            var xmlWriter = new XmlWriter(selectedFileName, directoryScanner.FsEntryScannedEvent);
 
-            directoryScanner.PubList.Add(treeViewFiller.FsEntriesQueue);
-            directoryScanner.PubList.Add(xmlWriter.FsEntriesQueue);
+            var treeViewFiller = new TreeViewFiller(treeView, new ConsumerComponent(directoryScanner.FsEntryScannedEvent));
+            var xmlWriter = new XmlWriter(selectedFileName, new ConsumerComponent(directoryScanner.FsEntryScannedEvent));
+
+            directoryScanner.PubList.Add(treeViewFiller.GetEntriesQueue());
+            directoryScanner.PubList.Add(xmlWriter.GetEntriesQueue());
 
             var workers = new List<ThreadStart>
             {
-                xmlWriter.BeginWriteDirectoryContentToFile,
                 directoryScanner.BeginScanDirectoryContent,
-                treeViewFiller.BeginListDirectoryContentToTree
+                xmlWriter.BeginConsume,
+                treeViewFiller.BeginConsume
             };
             workers.ForEach(w => new Thread(w) {IsBackground = true}.Start());
         }

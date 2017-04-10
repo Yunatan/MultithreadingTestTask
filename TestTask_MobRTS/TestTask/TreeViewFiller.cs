@@ -1,59 +1,35 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace TestTask
 {
-    public class TreeViewFiller
+    internal class TreeViewFiller : IConsumer
     {
-        public readonly Queue<HierarchicalLink<FileSystemInfo>> FsEntriesQueue;
-
+        private readonly ConsumerComponent consumerComponent;
         private readonly TreeView treeView;
-        private readonly AutoResetEvent fsEntryScannedEvent;
         private readonly Dictionary<FileSystemInfo, TreeNode> fsEntriesToTreeNodesMap;
         private readonly AddTreeNodeFunc addTreeNodeFunc;
 
-        public TreeViewFiller(TreeView treeView, AutoResetEvent fsEntryScannedEvent)
+        public TreeViewFiller(TreeView treeView, ConsumerComponent consumerComponent)
         {
-            FsEntriesQueue = new Queue<HierarchicalLink<FileSystemInfo>>();
             this.treeView = treeView;
-            this.fsEntryScannedEvent = fsEntryScannedEvent;
+            this.consumerComponent = consumerComponent;
             fsEntriesToTreeNodesMap = new Dictionary<FileSystemInfo, TreeNode>();
             addTreeNodeFunc = AddNodeAsExpanded;
         }
 
         private delegate int AddTreeNodeFunc(TreeNodeCollection nodes, TreeNode i);
 
-        public void BeginListDirectoryContentToTree()
+        public Queue<HierarchicalLink<FileSystemInfo>> GetEntriesQueue()
         {
-            treeView.Nodes.Clear();
-            while (true)
-            {
-                MonitorQueue();
-            }
+            return consumerComponent.FsEntriesQueue;
         }
 
-        private void MonitorQueue()
+        public void BeginConsume()
         {
-            if (FsEntriesQueue.Count > 0)
-            {
-                HierarchicalLink<FileSystemInfo> newFsEntry;
-                try
-                {
-                    Monitor.Enter(FsEntriesQueue);
-                    newFsEntry = FsEntriesQueue.Dequeue();
-                }
-                finally
-                {
-                    Monitor.Exit(FsEntriesQueue);
-                }
-                RenderFsEntryToTreeView(newFsEntry);
-            }
-            else
-            {
-                fsEntryScannedEvent.WaitOne();
-            }
+            treeView.Nodes.Clear();
+            consumerComponent.BeginConsume(RenderFsEntryToTreeView);
         }
 
         private void RenderFsEntryToTreeView(HierarchicalLink<FileSystemInfo> link)

@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsumerComponent.cs" />
     <Compile Include="DirectoryScanner.cs" />
     <Compile Include="ExceptionsHandler.cs" />
     <Compile Include="FsEntryXmlSerializer.cs" />
@@ -54,6 +55,7 @@
     <Compile Include="Forms\MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="IConsumer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TreeViewFiller.cs" />

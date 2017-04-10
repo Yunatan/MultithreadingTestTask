@@ -1,57 +1,33 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace TestTask
 {
-    public class XmlWriter
+    internal class XmlWriter : IConsumer
     {
-        public readonly Queue<HierarchicalLink<FileSystemInfo>> FsEntriesQueue;
-
+        private readonly ConsumerComponent consumerComponent;
         private readonly Dictionary<FileSystemInfo, XElement> fsEntriesToXElementsMap;
         private readonly string filePath;
-        private readonly AutoResetEvent fsEntryScannedEvent;
         private XDocument document;
 
-        public XmlWriter(string filePath, AutoResetEvent fsEntryScannedEvent)
+        public XmlWriter(string filePath, ConsumerComponent consumerComponent)
         {
             this.filePath = filePath;
-            FsEntriesQueue = new Queue<HierarchicalLink<FileSystemInfo>>();
-            this.fsEntryScannedEvent = fsEntryScannedEvent;
+            this.consumerComponent = consumerComponent;
             fsEntriesToXElementsMap = new Dictionary<FileSystemInfo, XElement>();
         }
 
-        public void BeginWriteDirectoryContentToFile()
+        public Queue<HierarchicalLink<FileSystemInfo>> GetEntriesQueue()
         {
-            document = new XDocument();
-            while (true)
-            {
-                MonitorQueue();
-            }
+            return consumerComponent.FsEntriesQueue;
         }
 
-        private void MonitorQueue()
+        public void BeginConsume()
         {
-            if (FsEntriesQueue.Count > 0)
-            {
-                HierarchicalLink<FileSystemInfo> newFsEntry;
-                try
-                {
-                    Monitor.Enter(FsEntriesQueue);
-                    newFsEntry = FsEntriesQueue.Dequeue();
-                }
-                finally
-                {
-                    Monitor.Exit(FsEntriesQueue);
-                }
-                WriteFsEntryToXml(newFsEntry);
-            }
-            else
-            {
-                fsEntryScannedEvent.WaitOne();
-            }
+            document = new XDocument();
+            consumerComponent.BeginConsume(WriteFsEntryToXml);
         }
 
         private void WriteFsEntryToXml(HierarchicalLink<FileSystemInfo> link)
